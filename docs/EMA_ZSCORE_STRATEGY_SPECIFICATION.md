@@ -446,6 +446,65 @@ src/backtest_ema_zscore_timeframes.py  # Timeframe analysis
 
 ---
 
+## 13. Tick Bar Analysis
+
+We tested whether tick-based bars (fixed number of ticks per bar) outperform time-based bars.
+
+### 13.1 Hypothesis
+
+Tick bars normalize for market activity - each bar represents the same amount of "information" rather than the same amount of time. During quiet periods, a 5-min bar might have 500 ticks; during volatile periods, 5000 ticks. Tick bars could smooth this inconsistency.
+
+### 13.2 Tick Bars Tested
+
+| Tick Bar Size | Avg Duration | Train Bars | Test Bars |
+|---------------|--------------|------------|-----------|
+| 1000 ticks | 5.5 min | 15,136 | 6,996 |
+| 1500 ticks | 8.3 min | 10,091 | 4,664 |
+| 2000 ticks | 11.0 min | 7,568 | 3,498 |
+| 2500 ticks | 13.8 min | 6,055 | 2,799 |
+| 3000 ticks | 16.5 min | 5,046 | 2,332 |
+
+### 13.3 Results Summary
+
+| Bar Type | Consistent | Both GO | Best Combined P&L |
+|----------|------------|---------|-------------------|
+| 1000-tick | 0 | 0 | N/A |
+| 1500-tick | 1 | 0 | $914.20 |
+| 2000-tick | 2 | 0 | $417.25 |
+| 2500-tick | 0 | 0 | N/A |
+| 3000-tick | 0 | 0 | N/A |
+| **5-min (time)** | **6** | **6** | **$1,007.80** |
+
+### 13.4 Analysis
+
+**Key Observations:**
+
+1. **Tick bars fail walk-forward validation:** All tick bar configurations lose money in training but profit in test - a regime dependency red flag.
+
+2. **1000-tick ≈ 5.5 min average:** Nearly identical duration to 5-min time bars, but dramatically worse performance.
+
+3. **Asymmetric performance:** Tick bars show negative P&L in training, positive in test. This suggests different market characteristics between periods that tick bars happened to capture, not a stable edge.
+
+4. **Time bars provide consistency:** 5-minute time bars are profitable in BOTH periods.
+
+### 13.5 Conclusion
+
+**Time-based 5-minute bars remain optimal.** Tick bars do NOT improve performance:
+
+1. **No BOTH GO configs** achieved with any tick bar size
+2. **Regime dependency** evident in train/test asymmetry
+3. **Normalizing by tick count** doesn't help this mean reversion strategy
+
+**Recommendation:** Use time-based 5-minute bars. Do not use tick bars.
+
+### 13.6 Code Reference
+
+```
+src/backtest_ema_zscore_tickbars.py  # Tick bar analysis
+```
+
+---
+
 ## Appendix A: Full Backtest Code (MES)
 
 See `src/backtest_ema_zscore.py` for complete implementation.

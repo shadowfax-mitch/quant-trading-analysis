@@ -231,6 +231,37 @@ src/backtest_ema_zscore_timeframes.py  # Timeframe analysis
 
 ---
 
+## Tick Bar Analysis (Added)
+
+We tested whether tick-based bars (fixed tick count) outperform time-based bars.
+
+### Results
+
+| Bar Type | Avg Duration | Consistent | Both GO | Best Combined P&L |
+|----------|--------------|------------|---------|-------------------|
+| 1000-tick | 5.5 min | 0 | 0 | N/A |
+| 1500-tick | 8.3 min | 1 | 0 | $914.20 |
+| 2000-tick | 11.0 min | 2 | 0 | $417.25 |
+| 2500-tick | 13.8 min | 0 | 0 | N/A |
+| 3000-tick | 16.5 min | 0 | 0 | N/A |
+| **5-min (time)** | 5.0 min | **6** | **6** | **$1,007.80** |
+
+### Conclusion
+
+**Time-based 5-minute bars remain optimal.** Tick bars:
+1. Fail walk-forward validation (0 BOTH GO configs)
+2. Show regime dependency (lose in train, profit in test)
+3. Do not improve signal quality for this strategy
+
+**Recommendation:** Use time-based 5-minute bars. Do not use tick bars.
+
+### Code Added
+```
+src/backtest_ema_zscore_tickbars.py  # Tick bar analysis
+```
+
+---
+
 **Awaiting Codex validation before proceeding to Phase 1.**
 
 Please respond with:
