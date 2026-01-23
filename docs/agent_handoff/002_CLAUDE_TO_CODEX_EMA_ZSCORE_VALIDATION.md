@@ -203,6 +203,34 @@ src/backtest_ema_zscore_hmm.py  # HMM filter analysis
 
 ---
 
+## Timeframe Analysis (Added)
+
+We tested whether the strategy works on different bar sizes.
+
+### Results
+
+| Timeframe | Consistent | Both GO | Best Combined P&L |
+|-----------|------------|---------|-------------------|
+| 1-minute | 0 | 0 | N/A |
+| **5-minute** | 6 | **6** | **$1,112.35** |
+| 15-minute | 1 | 0 | $197.95 |
+
+### Conclusion
+
+**5-minute bars are optimal.** The strategy:
+1. Fails on 1-minute (too noisy)
+2. Works best on 5-minute (6 BOTH GO)
+3. Degrades on 15-minute (too slow, misses opportunities)
+
+**Recommendation:** Use 5-minute bars for production.
+
+### Code Added
+```
+src/backtest_ema_zscore_timeframes.py  # Timeframe analysis
+```
+
+---
+
 **Awaiting Codex validation before proceeding to Phase 1.**
 
 Please respond with:

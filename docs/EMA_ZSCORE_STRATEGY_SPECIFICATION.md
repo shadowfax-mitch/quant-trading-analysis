@@ -391,6 +391,61 @@ src/backtest_ema_zscore_hmm.py  # HMM filter analysis
 
 ---
 
+## 12. Timeframe Analysis
+
+We tested whether the strategy works across different bar sizes to verify the 5-minute timeframe is optimal.
+
+### 12.1 Timeframes Tested
+
+| Timeframe | Parameter Scaling | Min Trades Requirement |
+|-----------|-------------------|------------------------|
+| 1-minute | EMA/Z scaled up 5x (105 bars = 105 min) | 30 |
+| 5-minute | Baseline (21 bars = 105 min) | 20 |
+| 15-minute | EMA/Z scaled down 3x (7 bars = 105 min) | 15 |
+
+### 12.2 Results Summary
+
+| Timeframe | Configs Tested | Consistent | Both GO | Best Combined P&L |
+|-----------|----------------|------------|---------|-------------------|
+| 1-minute | 7 | 0 | 0 | N/A |
+| **5-minute** | 6 | 6 | **6** | **$1,112.35** |
+| 15-minute | 6 | 1 | 0 | $197.95 |
+
+### 12.3 Analysis
+
+**1-minute bars (too noisy):**
+- No consistent configurations found
+- Microstructure noise dominates signal
+- Even with scaled parameters (105-bar EMA), signal quality is poor
+
+**5-minute bars (optimal):**
+- 6 out of 6 configs achieved BOTH GO status
+- Best balance of signal quality and trade frequency
+- Sufficient smoothing to filter noise while preserving mean-reversion opportunities
+
+**15-minute bars (too slow):**
+- Only 1 consistent config (no BOTH GO)
+- Fewer trading opportunities
+- Mean reversion signal arrives too late
+
+### 12.4 Conclusion
+
+**5-minute bars are the optimal timeframe.** The strategy:
+
+1. **Requires sufficient smoothing:** 1-minute bars are too noisy
+2. **Needs adequate frequency:** 15-minute bars miss opportunities
+3. **5-minute is the sweet spot:** Balances signal quality and trade count
+
+**Recommendation:** Use 5-minute bars exclusively for production.
+
+### 12.5 Code Reference
+
+```
+src/backtest_ema_zscore_timeframes.py  # Timeframe analysis
+```
+
+---
+
 ## Appendix A: Full Backtest Code (MES)
 
 See `src/backtest_ema_zscore.py` for complete implementation.
