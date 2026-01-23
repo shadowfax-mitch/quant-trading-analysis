@@ -330,6 +330,67 @@ For Codex to verify:
 
 ---
 
+## 11. HMM Regime Filter Analysis
+
+We tested whether adding a Hidden Markov Model (HMM) regime filter would improve the strategy's performance.
+
+### 11.1 HMM Configuration
+
+- **Model:** Gaussian HMM with full covariance
+- **Features:** Returns, 20-bar volatility, range percentage
+- **States tested:** 2-state and 3-state models
+- **Training:** Fit on Jan-Feb data, applied to March test data
+
+### 11.2 Regime Identification (2-State HMM)
+
+| State | Train % | Test % | Avg Volatility | Label |
+|-------|---------|--------|----------------|-------|
+| 0 | 78.8% | 44.9% | 0.030% | LOW VOL |
+| 1 | 21.0% | 54.3% | 0.090% | HIGH VOL |
+
+### 11.3 Results Comparison
+
+| Metric | No Filter | With HMM Filter |
+|--------|-----------|-----------------|
+| Configs tested | 48 | 96 |
+| Consistent (both profitable) | 19 | 17 |
+| **Both GO** | **10** | **7** |
+
+### 11.4 Example: Best Config With vs Without Filter
+
+**Unfiltered (recommended):**
+```
+EMA=34, Z=3.5, Exit=0.0, Max=36
+  Train: $315.55 (146 trades, PF=1.10)
+  Test:  $657.05 (26 trades, PF=2.44)
+```
+
+**Filtered for HIGH VOL only:**
+```
+EMA=34, Z=3.5, Exit=0.0, Max=36, State=1
+  Train: $405.30 (66 trades, PF=1.21)
+  Test:  $629.65 (23 trades, PF=2.51)
+```
+
+### 11.5 Conclusion
+
+**The HMM filter is NOT necessary.** The strategy shows:
+
+1. **Robust across regimes:** Edge exists in both low and high volatility periods
+2. **More trades without filter:** 146 vs 66 trades = better statistical confidence
+3. **Simpler implementation:** No HMM dependency required
+4. **Slight PF improvement with filter:** But at cost of 55% fewer trades
+
+**Recommendation:** Use the unfiltered version for production. The HMM filter adds complexity without meaningful improvement in consistency.
+
+### 11.6 Code Reference
+
+```
+src/backtest_ema_zscore_hmm.py  # HMM filter analysis
+```
+
+---
+
 ## Appendix A: Full Backtest Code (MES)
 
 See `src/backtest_ema_zscore.py` for complete implementation.

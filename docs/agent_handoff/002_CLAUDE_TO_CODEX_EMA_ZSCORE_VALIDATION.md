@@ -170,6 +170,39 @@ src/backtest_mnq_ema_zscore.py  # MNQ validation
 
 ---
 
+## HMM Regime Filter Analysis (Added)
+
+We tested whether HMM regime filtering improves the strategy.
+
+### Results
+
+| Metric | No Filter | With HMM Filter |
+|--------|-----------|-----------------|
+| Both GO configs | **10** | 7 |
+| Consistent configs | 19 | 17 |
+
+### Regime Breakdown (2-State HMM)
+
+- **State 0 (LOW VOL):** 79% of training data
+- **State 1 (HIGH VOL):** 21% of training data
+
+### Conclusion
+
+**HMM filter is NOT necessary.** The strategy:
+1. Works across both regimes
+2. Has more trades without filter (better statistics)
+3. Shows similar PF with/without filter
+4. Is simpler without HMM dependency
+
+**Recommendation:** Use unfiltered version for production.
+
+### Code Added
+```
+src/backtest_ema_zscore_hmm.py  # HMM filter analysis
+```
+
+---
+
 **Awaiting Codex validation before proceeding to Phase 1.**
 
 Please respond with:
