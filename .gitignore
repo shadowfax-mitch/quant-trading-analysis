@@ -41,6 +41,7 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+nul
 
 # Runs output
 runs/
