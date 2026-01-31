@@ -1,19 +1,28 @@
-# EMA Z-Score Mean Reversion Strategy for NinjaTrader 8
+# EMA Z-Score Strategies for NinjaTrader 8
 
 ## Overview
 
-This is a mean reversion strategy that trades extreme deviations from the EMA, measured in standard deviations (Z-Score).
+Two complementary Z-Score based strategies:
 
-**Validated Performance:**
-| Instrument | OOS P&L | Trades | Profit Factor |
-|------------|---------|--------|---------------|
-| MNQ | +$1,178 | 21 | 3.23 |
-| MES | +$333 | 10 | 4.10 |
+1. **EmaZScoreMeanReversion** - Counter-trend mean reversion at extreme Z-scores
+2. **ZoneScalper** - Trend-following scalper in the 4.0-4.5 Z-score zone
+
+### Performance Summary
+
+| Strategy | Type | OOS P&L | Trades | Win Rate | Max DD | PF |
+|----------|------|---------|--------|----------|--------|-----|
+| Mean Reversion (Z=5.0) | Counter-trend | +$1,178 | 21 | ~65% | ~$300 | 3.23 |
+| Zone Scalper (Z=4.0) | Trend-following | +$4,966 | 8 | 62% | $1,257 | 2.97 |
 
 ## Files
 
-- `EmaZScoreMeanReversion.cs` - Main strategy file
-- `EmaZScoreIndicator.cs` - Companion indicator for chart visualization
+### Strategy Files
+- `EmaZScoreMeanReversion.cs` - Mean reversion strategy (Z=5.0 entry)
+- `ZoneScalper.cs` - Zone scalper strategy (Z=4.0 entry)
+
+### Indicator Files
+- `EmaZScoreIndicator.cs` - Indicator for mean reversion (shows Z=5.0 levels)
+- `ZoneScalperIndicator.cs` - Indicator for zone scalper (shows entry/target/stop zones)
 
 ## Installation
 
@@ -116,7 +125,61 @@ Recommended testing period: At least 1 month of paper trading
 - Win rate: ~65-75%
 - Max observed drawdown: ~$300
 
+---
+
+## Zone Scalper Strategy
+
+### Concept
+Unlike the mean reversion strategy that waits for Z=5.0 and bets on reversion, the Zone Scalper enters at Z=4.0 and rides momentum to Z=4.5 (trend-following).
+
+### Parameters (Option A - High Win Rate)
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Entry Threshold | 4.0 | Enter when Z crosses this level |
+| Target Threshold | 4.5 | Take profit at this Z level |
+| Stop Threshold | 2.0 | Stop loss when Z reverts here |
+| Min Z Velocity | 0.3 | Required momentum for entry |
+| Max Hold Bars | 15 | ~75 minutes on 5-min chart |
+| RTH Only | True | 9 AM - 4 PM |
+
+### Strategy Logic
+
+**Entry:**
+- LONG: Z crosses ABOVE +4.0 AND Z-Velocity >= 0.3
+- SHORT: Z crosses BELOW -4.0 AND Z-Velocity <= -0.3
+
+**Exit:**
+- TARGET: Z reaches +/-4.5 (profit)
+- STOP: Z reverts to +/-2.0 (loss)
+- MAX_HOLD: 15 bars elapsed
+- RTH_CLOSE: 4:00 PM
+
+### Indicator Color Coding
+- **Lime**: Valid entry signal (Z in zone + velocity confirmed)
+- **Yellow**: In zone but no velocity confirmation
+- **Orange**: Between stop and entry zones
+- **Dark Green**: Target zone reached
+- **Blue**: Neutral
+
+---
+
+## Running Both Strategies
+
+You can run both strategies simultaneously on the same chart:
+1. Mean Reversion catches the rare Z=5.0 extremes
+2. Zone Scalper catches the more frequent Z=4.0 moves
+
+They trade different market conditions and complement each other.
+
+---
+
 ## Changelog
+
+### Version 1.1 (2026-01-24)
+- Added Zone Scalper strategy (trend-following)
+- Added ZoneScalperIndicator with velocity display
+- Validated Zone Scalper Option A: 62% win rate, PF=2.97
 
 ### Version 1.0 (2026-01-23)
 - Initial release
