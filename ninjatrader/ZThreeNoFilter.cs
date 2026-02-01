@@ -37,6 +37,13 @@ namespace NinjaTrader.NinjaScript.Strategies
     /// CRITICAL: Bar-close exits only. Do NOT use SetProfitTarget/SetStopLoss
     /// as those evaluate intrabar and destroy the edge on 5-min bars.
     ///
+    /// Fill mechanics with Calculate.OnBarClose:
+    /// - Entry: signal detected at bar N close -> EnterLong/Short -> fills at bar N+1 open
+    /// - Exit: PT/SL evaluated at bar M close -> ExitLong/Short -> fills at bar M+1 open
+    /// - entryPrice is captured from the actual execution fill via OnExecutionUpdate
+    /// - This is slightly more conservative than the Python backtest (which exits at
+    ///   bar close), so live results should be similar or better than backtest.
+    ///
     /// Based on: docs/strategy_specs/ZThreeNoFilter.md
     /// </summary>
     public class ZThreeNoFilter : Strategy
@@ -49,6 +56,7 @@ namespace NinjaTrader.NinjaScript.Strategies
 
         private int entryBar = 0;
         private double entryPrice = 0;
+        private bool entryPriceFilled = false;
         private string entryDirection = "";
         private int lastExitBar = -999;
         #endregion
@@ -170,6 +178,10 @@ namespace NinjaTrader.NinjaScript.Strategies
             // --- EXIT LOGIC (evaluated first) ---
             if (Position.MarketPosition != MarketPosition.Flat)
             {
+                // Don't evaluate exits until we have the actual fill price
+                if (!entryPriceFilled)
+                    return;
+
                 int barsHeld = CurrentBar - entryBar;
                 double unrealized = 0;
 
@@ -246,18 +258,32 @@ namespace NinjaTrader.NinjaScript.Strategies
             {
                 EnterShort(Contracts, "Short Entry");
                 entryBar = CurrentBar;
-                entryPrice = Close[0];
+                entryPriceFilled = false;
                 entryDirection = "SHORT";
-                LogTrade($"ENTER SHORT - Z={prevZ:F2}");
+                LogTrade($"ENTER SHORT signal - Z={prevZ:F2}");
             }
             // LONG: fade negative extreme
             else if (prevZ <= -EntryThreshold)
             {
                 EnterLong(Contracts, "Long Entry");
                 entryBar = CurrentBar;
-                entryPrice = Close[0];
+                entryPriceFilled = false;
                 entryDirection = "LONG";
-                LogTrade($"ENTER LONG - Z={prevZ:F2}");
+                LogTrade($"ENTER LONG signal - Z={prevZ:F2}");
+            }
+        }
+
+        protected override void OnExecutionUpdate(Execution execution, string executionId, double price, int quantity, MarketPosition marketPosition, string orderId, DateTime time)
+        {
+            // Capture actual fill price for entry orders
+            if (execution.Order != null && execution.Order.OrderState == OrderState.Filled)
+            {
+                if (execution.Order.Name == "Long Entry" || execution.Order.Name == "Short Entry")
+                {
+                    entryPrice = execution.Price;
+                    entryPriceFilled = true;
+                    LogTrade($"FILLED {execution.Order.Name} @ {execution.Price:F2}");
+                }
             }
         }
 
